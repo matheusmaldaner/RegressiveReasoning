@@ -133,7 +133,7 @@ Pedro Moss - [Github](https://github.com/p4moss12)
 
 Ruo Chen - chenruo@ufl.edu
 
-Report Link: [https://github.com/UF-FundMachineLearning-Summer23/final-project---data-collection-regressive-reasoning/blob/main/Final_Project___EEL5840_EEE4773_Summer_2023.pdf](https://github.com/UF-FundMachineLearning-Summer23/final-project---data-collection-regressive-reasoning/blob/main/Final_Project___EEL5840_EEE4773_Summer_2023.pdf)
+Report Link: [Link](https://github.com/UF-FundMachineLearning-Summer23/final-project---code-report-regressive-reasoning/blob/main/EEL5840_Project_Report.pdf)
 
 
 <!-- ACKNOWLEDGEMENTS -->
