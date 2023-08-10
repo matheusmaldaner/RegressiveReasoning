@@ -57,7 +57,7 @@ This project classifies 10 brand logo. The integer encoding is as follows:
 
 Confusion matrix
 
-![Confusion Matrix](/confusion_matrix.png)
+![Confusion Matrix](figs/confusion_matrix.png)
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -81,7 +81,7 @@ Tensorflow-2.7.0 kernel library versions:
 1. Import all files into HiPerGator storage
 * test.ipynb
 * train.ipynb
-* efficientnetv2-s.tar
+* efficientnetv2-s.tar [Link to file](https://drive.google.com/file/d/1JoS2xVaANyANP1EN6pCxgo1rcBlN2XRz/view?usp=sharing)
 
 The filepath should look like so:
 * Folder
