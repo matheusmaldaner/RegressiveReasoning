@@ -53,7 +53,7 @@ This project classifies 10 brand logo. The integer encoding is as follows:
 * 8 : Gator
 * 9 : 3M
 
-[Project link](https://github.com/UF-FundMachineLearning-Summer23/final-project---data-collection-regressive-reasoning/tree/main)
+[Project link](https://github.com/UF-FundMachineLearning-Summer23/final-project---code-report-regressive-reasoning)
 
 Confusion matrix
 
