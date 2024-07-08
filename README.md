@@ -82,6 +82,7 @@ Tensorflow-2.7.0 kernel library versions:
 * test.ipynb
 * train.ipynb
 * efficientnetv2-s.tar [Link to file](https://drive.google.com/file/d/1JoS2xVaANyANP1EN6pCxgo1rcBlN2XRz/view?usp=sharing)
+* dataset [Link to dataset](https://drive.google.com/drive/folders/1nr8YHapqXVqLthvaC2O4IZgH1-79XQ_P?usp=sharing)
 
 The filepath should look like so:
 * Folder
