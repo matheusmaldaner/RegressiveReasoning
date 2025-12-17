@@ -1,147 +1,121 @@
-<!-- PROJECT LOGO -->
-<br />
-<p align="center">
-  <h3 align="center">Regressive Reasoning</h3>
+<div align="center">
 
-  <p align="center">
-    Brand Logo Classification
-  </p>
-</p>
+<!-- Replace with your own banner/logo path -->
+<img src="banner.svg" alt="Regressive Reasoning Logo">
 
+*Brand Logo Classification (10 Classes) — Trained & Evaluated on HiPerGator*
 
+<!-- Badges (edit links as needed) -->
+![Python](https://img.shields.io/badge/python-3.10-orange)
+[![Framework](https://img.shields.io/badge/framework-TensorFlow%202.7.0-FF6F00?logo=tensorflow&logoColor=white)](https://www.tensorflow.org/)
+<a href="EEL5840_Project_Report.pdf">
+  <img alt="Project Report PDF" src="https://img.shields.io/badge/Project%20Report-PDF-red?logo=adobeacrobatreader&logoColor=white">
+</a>
 
-<!-- TABLE OF CONTENTS -->
-<details open="open">
-  <summary>Table of Contents</summary>
-  <ol>
-    <li>
-      <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
-    </li>
-    <li>
-      <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#dependencies">Dependencies</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
-    </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
-    <li><a href="#contributing">Contributing</a></li>
-    <li><a href="#license">License</a></li>
-    <li><a href="#authors">Authors</a></li>
-    <li><a href="#acknowledgements">Acknowledgements</a></li>
-  </ol>
-</details>
+</div>
+
+---
+
+### 🧠 Overview
+
+**Regressive Reasoning** is a computer vision project for **classifying 10 brand logos** using a TensorFlow-based pipeline developed on the **HiPerGator** supercomputing environment.  
+The model predicts an integer label corresponding to a brand:
+
+- **0**: Nike  
+- **1**: Adidas  
+- **2**: Ford  
+- **3**: Honda  
+- **4**: General Mills  
+- **5**: Unilever  
+- **6**: McDonald's  
+- **7**: KFC  
+- **8**: Gator  
+- **9**: 3M  
 
 
+## Quick Start
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+This project was run on HiPerGator (UF's supercomputer) using the **Tensorflow-2.7.0** kernel. Below is the minimal setup to reproduce.
 
-This project classifies 10 brand logo. The integer encoding is as follows:
-* 0 : Nike
-* 1 : Adidas
-* 2 : Ford
-* 3 : Honda
-* 4 : General Mills
-* 5 : Unilever
-* 6 : McDonald's
-* 7 : KFC
-* 8 : Gator
-* 9 : 3M
-
-[Project link](https://github.com/UF-FundMachineLearning-Summer23/final-project---code-report-regressive-reasoning)
-
-Confusion matrix
-
-![Confusion Matrix](figs/confusion_matrix.png)
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-The project was done on the HiPerGator supercomputer network, using the Tensorflow-2.7.0 kernel.
-
-### Dependencies
+### (1) 🧰 Dependencies
 
 Tensorflow-2.7.0 kernel library versions:
 
-* Numpy 1.22.3
+- Numpy **1.22.3**
+- Tensorflow **2.7.0**
+- sklearn **0.24.2**
+- Matplotlib
 
-* Tensorflow 2.7.0
+### (2) 📦 Files to Place in One Folder
 
-* sklearn 0.24.2 (for train-test-split for splitting data)
+Upload these into your HiPerGator storage:
 
-* Matplotlib (for display images and plotting results)
+- `train.ipynb`
+- `test.ipynb`
+- `efficientnetv2-s.tar.gz` (download: https://drive.google.com/file/d/1JoS2xVaANyANP1EN6pCxgo1rcBlN2XRz/view?usp=sharing)
+- dataset folder (download: https://drive.google.com/drive/folders/1nr8YHapqXVqLthvaC2O4IZgH1-79XQ_P?usp=sharing)
+- test arrays (examples):
+  - `easy_data.npy`
+  - `easy_labels.npy`
 
-### Installation
+Example directory layout:
 
-1. Import all files into HiPerGator storage
-* test.ipynb
-* train.ipynb
-* efficientnetv2-s.tar [Link to file](https://drive.google.com/file/d/1JoS2xVaANyANP1EN6pCxgo1rcBlN2XRz/view?usp=sharing)
-* dataset [Link to dataset](https://drive.google.com/drive/folders/1nr8YHapqXVqLthvaC2O4IZgH1-79XQ_P?usp=sharing)
+- Folder  
+  - `train.ipynb`  
+  - `test.ipynb`  
+  - `efficientnetv2-s.tar.gz`  
+  - `easy_data.npy`  
+  - `easy_labels.npy`  
 
-The filepath should look like so:
-* Folder
-  * test.ipynb
-  * train.ipynb
-  * efficientnetv2-s.tar.gz (which will be extracted in Usage step)
-  * easy_data.npy (or whatever filename the test images will be)
-  * easy_labels.npy (or whatever filename the test labels will be)
+### (3) ⚙️ Uncompress the Model
 
-2. Import image data into HiPerGator Storage
+Run on the HiPerGator terminal:
 
-3. Run jupyter notebooks using Tensorflow-2.7.0 kernel on HiPerGator
+```bash
+tar -xvzf efficientnetv2-s.tar.gz
+```
 
-<!-- USAGE EXAMPLES -->
-## Usage
+Make sure the extracted `efficientnetv2-s/` folder sits alongside the notebooks and data files.
 
-Make sure you only have a singular Kernel active at a time to prevent crashes.
+### (4) ▶️ Run the Notebooks
 
-Uncompress the efficientnetv2-s.tar.gz by running the following command on the HiPerGator terminal window:
+Launch Jupyter on HiPerGator using the **Tensorflow-2.7.0** kernel and run:
 
-- tar -xvzf efficientnetv2-s.tar.gz
-
-Ensure that the uncompressed efficientnetv2-s folder lies in the same folder as the remaining files cited above. 
-
-#### Easy Dataset instructions
-In test.ipynb, if loading a new dataset move to the second code block and adjust the variables "data_path" and "labels_path" to the appropriate relative file locations to load the test images and labels. The "test" function is designated to be used for the easy dataset.
-
-#### Hard Dataset instructions
-Included in the document we have an additional "test_hard" function for the extra credit hard dataset. In the third code block adjust the variables "hard_data_path" and "hard_labels_path" to the appropriate relative file locations to load the hard test images and labels. When perfoming hard test, uncomment the data loading functions.
-
-<!-- ROADMAP -->
-## Roadmap
-
-1. Further improvement in reporting of objects that cannot be classified, labeling them as -1.
-2. Increase model accuracy by implementing image augmentation. 
-3. Implement different model architectures for comparison purposes.  
-
-<!-- LICENSE -->
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
-<!-- Authors -->
-## Authors
-
-Matheus Kunzler Maldaner - [Github](https://github.com/matheusmaldaner)
-
-Pedro Moss - [Github](https://github.com/p4moss12)
-
-Ruo Chen - chenruo@ufl.edu
-
-Report Link: [Link](https://github.com/UF-FundMachineLearning-Summer23/final-project---code-report-regressive-reasoning/blob/main/EEL5840_Project_Report.pdf)
+- `train.ipynb` for training
+- `test.ipynb` for evaluation
 
 
-<!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements
+## 📊 Confusion Matrix
 
-* Catia Silva for instructing the course
-* Andrew Jensen, Bradley Johnson and Mengdi Zhu for TAing the course
-* Other groups that helped gathering the dataset
+![Confusion Matrix](figs/confusion_matrix.png)
 
-## Thank you
+
+## 🧭 Usage Notes
+
+- Keep **only one active kernel** at a time to avoid crashes.
+- **Easy dataset:** In `test.ipynb`, use the `test` function and update:
+  - `data_path`
+  - `labels_path`
+- **Hard dataset (extra credit):** Use `test_hard` and update:
+  - `hard_data_path`
+  - `hard_labels_path`
+  - Uncomment the hard data loading functions when running.
+
+## 🛣️ Roadmap
+
+1. Improve handling/reporting of unclassifiable objects (label as **-1**).  
+2. Increase accuracy with image augmentation.  
+3. Compare additional model architectures.  
+
+
+## 📄 License
+
+Distributed under the **MIT License**. See `LICENSE` for more information.
+
+
+## 👥 Authors
+
+- Matheus Kunzler Maldaner — [GitHub](https://github.com/matheusmaldaner)  
+- Pedro Moss — [GitHub](https://github.com/p4moss12)  
+- Ruo Chen — chenruo@ufl.edu  
+
