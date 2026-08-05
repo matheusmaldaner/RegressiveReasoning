@@ -42,24 +42,6 @@
       --font-mono: 'SF Mono', 'Fira Code', Consolas, monospace;
     }
 
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --color-bg: #111114;
-        --color-surface: #1c1c20;
-        --color-text: #e8e8ec;
-        --color-text-muted: #b4b4b8;
-        --color-border: #333338;
-        --color-primary: #10b981;
-        --color-primary-hover: #34d39e;
-        --color-bg-alt: #18181c;
-        --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-        --shadow-md: 0 4px 8px rgba(0,0,0,0.5);
-        --btn-depth-neutral: #000000;
-        --cell-hue: 52, 211, 158;
-        --cell-ink-strong: #0c0e12;
-      }
-    }
-
     :root[data-theme="dark"] {
       --color-bg: #111114;
       --color-surface: #1c1c20;
@@ -158,11 +140,6 @@
     /* moon in light mode, sun in dark mode */
     .theme-toggle .icon-sun { display: none; }
     .theme-toggle .icon-moon { display: block; }
-
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
-      :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
-    }
 
     :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
     :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
@@ -947,14 +924,12 @@
       }
 
       // repaint on theme change so cell hue tracks the color scheme
-      var mq = window.matchMedia("(prefers-color-scheme: dark)");
-      if (mq.addEventListener) mq.addEventListener("change", paintCells);
       window.addEventListener("themechange", paintCells);
 
       // theme toggle
       document.getElementById("theme-toggle").addEventListener("click", function () {
         var root = document.documentElement;
-        var current = root.dataset.theme || (mq.matches ? "dark" : "light");
+        var current = root.dataset.theme || "light";
         var next = current === "dark" ? "light" : "dark";
         root.dataset.theme = next;
         localStorage.setItem("theme", next);
