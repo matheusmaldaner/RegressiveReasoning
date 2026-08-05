@@ -6,408 +6,844 @@
   <title>Regressive Reasoning</title>
   <meta name="description" content="Brand logo classification with TensorFlow and EfficientNetV2 on UF's HiPerGator supercomputer.">
   <style>
-    /* css variables - dark theme (default) */
+    /* flat design tokens */
     :root {
-      --bg-primary: #000000;
-      --bg-secondary: #0d0d0d;
-      --bg-tertiary: #171717;
-      --text-primary: #fafafa;
-      --text-secondary: #a3a3a3;
-      --text-muted: #737373;
-      --border: #262626;
-      --border-hover: #404040;
-      --accent: #34d399;
-      --accent-hover: #10b981;
-      --accent-glow: rgba(52, 211, 153, 0.3);
-      --accent-dim: rgba(52, 211, 153, 0.15);
-      --radius-sm: 8px;
-      --radius-md: 12px;
-      --radius-xl: 20px;
-      --transition: 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
-      --glass-bg: rgba(255, 255, 255, 0.05);
-      --glass-border: rgba(255, 255, 255, 0.18);
-      --card-grad-a: rgba(255, 255, 255, 0.1);
-      --card-grad-b: rgba(255, 255, 255, 0.05);
-      --card-shadow:
-        0 8px 32px rgba(0, 0, 0, 0.35),
-        0 2px 8px rgba(0, 0, 0, 0.2),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
-        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+      --bg: #fafaf8;
+      --surface: #ffffff;
+      --ink: #16181d;
+      --ink-soft: #4d5259;
+      --ink-faint: #7d828a;
+      --hairline: #d9d7d0;
+      --accent: #0021a5;
+      --select: #c93a10;
+      --cell-hue: 0, 33, 165;
+      --cell-ink-strong: #ffffff;
+      --serif: "Charter", "Iowan Old Style", Georgia, "Times New Roman", serif;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
     }
 
-    /* light theme */
-    @media (prefers-color-scheme: light) {
+    @media (prefers-color-scheme: dark) {
       :root {
-        --bg-primary: #f5f5f7;
-        --bg-secondary: #ffffff;
-        --bg-tertiary: #f0f0f2;
-        --text-primary: #1d1d1f;
-        --text-secondary: #6e6e73;
-        --text-muted: #86868b;
-        --border: rgba(0, 0, 0, 0.08);
-        --border-hover: rgba(0, 0, 0, 0.15);
-        --accent: #10b981;
-        --accent-hover: #059669;
-        --accent-glow: rgba(16, 185, 129, 0.2);
-        --accent-dim: rgba(16, 185, 129, 0.12);
-        --glass-bg: rgba(255, 255, 255, 0.7);
-        --glass-border: rgba(255, 255, 255, 0.7);
-        --card-grad-a: rgba(255, 255, 255, 0.85);
-        --card-grad-b: rgba(255, 255, 255, 0.6);
-        --card-shadow:
-          0 8px 32px rgba(0, 0, 0, 0.1),
-          0 2px 8px rgba(0, 0, 0, 0.05),
-          inset 0 1px 0 rgba(255, 255, 255, 1),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.03);
+        --bg: #111318;
+        --surface: #171a20;
+        --ink: #e9e7e2;
+        --ink-soft: #a8acb3;
+        --ink-faint: #767b84;
+        --hairline: #2b2f37;
+        --accent: #8fa7ff;
+        --select: #ff7a4d;
+        --cell-hue: 143, 167, 255;
+        --cell-ink-strong: #0c0e14;
       }
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    html { font-size: 16px; scroll-behavior: smooth; }
+    html { font-size: 16px; }
 
     body {
-      font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--ink);
       line-height: 1.6;
-      min-height: 100vh;
-      position: relative;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* background gradient for liquid glass effect */
-    .glass-bg {
-      position: fixed;
-      inset: 0;
-      z-index: -1;
-      background:
-        radial-gradient(ellipse 100% 80% at 10% 20%, rgba(52, 211, 153, 0.25) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 60% at 90% 30%, rgba(99, 102, 241, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse 70% 50% at 50% 90%, rgba(52, 211, 153, 0.18) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 40% at 30% 70%, rgba(168, 85, 247, 0.12) 0%, transparent 50%);
-      pointer-events: none;
-      animation: glassBgShift 20s ease-in-out infinite alternate;
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+    a:focus-visible, button:focus-visible, td:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
 
-    @media (prefers-color-scheme: light) {
-      .glass-bg {
-        background:
-          radial-gradient(ellipse 100% 80% at 10% 20%, rgba(16, 185, 129, 0.18) 0%, transparent 50%),
-          radial-gradient(ellipse 80% 60% at 90% 30%, rgba(99, 102, 241, 0.12) 0%, transparent 50%),
-          radial-gradient(ellipse 70% 50% at 50% 90%, rgba(16, 185, 129, 0.15) 0%, transparent 50%),
-          radial-gradient(ellipse 60% 40% at 30% 70%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
-      }
-    }
-
-    @keyframes glassBgShift {
-      0% { transform: scale(1) translate(0, 0); }
-      100% { transform: scale(1.05) translate(2%, 2%); }
-    }
-
-    main {
-      padding: 80px 32px 60px;
-      max-width: 1100px;
+    .wrap {
+      max-width: 1060px;
       margin: 0 auto;
-      width: 100%;
+      padding: 0 24px;
+    }
+
+    /* masthead */
+    header {
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .masthead {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 20px 0;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .masthead .wordmark {
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: 0.01em;
+      color: var(--ink);
+    }
+
+    .masthead nav {
+      display: flex;
+      gap: 24px;
+      font-size: 13.5px;
     }
 
     /* hero */
     .hero {
-      text-align: center;
-      margin-bottom: 56px;
-      animation: fadeInUp 0.6s ease;
+      padding: 72px 0 56px;
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .hero .eyebrow {
+      font-family: var(--mono);
+      font-size: 12px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 20px;
     }
 
     .hero h1 {
-      font-size: clamp(36px, 6vw, 56px);
-      font-weight: 600;
-      letter-spacing: -0.02em;
-      margin-bottom: 16px;
-      background: linear-gradient(135deg, var(--text-primary) 0%, var(--text-secondary) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
+      font-family: var(--serif);
+      font-size: clamp(40px, 7vw, 72px);
+      font-weight: 700;
+      line-height: 1.04;
+      letter-spacing: -0.015em;
+      max-width: 15ch;
+      margin-bottom: 28px;
     }
 
-    .hero .subtitle {
-      font-size: 18px;
-      color: var(--text-secondary);
-      max-width: 620px;
-      margin: 0 auto 24px;
+    .hero .lede {
+      font-size: 19px;
+      line-height: 1.65;
+      color: var(--ink-soft);
+      max-width: 58ch;
+      margin-bottom: 36px;
     }
 
-    .hero .subtitle strong { color: var(--accent); font-weight: 600; }
+    .hero .lede strong { color: var(--ink); font-weight: 600; }
 
-    .hero-links {
-      display: flex;
-      justify-content: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
 
     .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 22px;
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      transition: all var(--transition);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-
-    .btn-primary {
-      background: linear-gradient(135deg, rgba(52, 211, 153, 0.85) 0%, rgba(16, 185, 129, 0.75) 100%);
-      color: #fff;
-      border-color: rgba(255, 255, 255, 0.25);
-      box-shadow: 0 4px 16px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-
-    .btn-primary:hover {
-      transform: scale(1.03);
-      box-shadow: 0 6px 24px var(--accent-glow), inset 0 1px 0 rgba(255, 255, 255, 0.3);
-    }
-
-    .btn-secondary {
-      background: var(--glass-bg);
-      color: var(--text-primary);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--border-hover);
-      transform: translateY(-2px);
-    }
-
-    /* tags */
-    .tags {
-      display: flex;
-      justify-content: center;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 24px;
-    }
-
-    .tag {
-      font-size: 12px;
-      font-weight: 500;
-      color: var(--text-secondary);
-      padding: 5px 14px;
-      border-radius: 20px;
-      background: var(--glass-bg);
-      border: 1px solid var(--glass-border);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-    }
-
-    /* cards */
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      margin-bottom: 56px;
-    }
-
-    @media (max-width: 760px) {
-      .cards { grid-template-columns: 1fr; max-width: 440px; margin-left: auto; margin-right: auto; }
-    }
-
-    .card {
-      background: linear-gradient(135deg, var(--card-grad-a) 0%, var(--card-grad-b) 100%);
-      backdrop-filter: blur(24px) saturate(200%);
-      -webkit-backdrop-filter: blur(24px) saturate(200%);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
-      padding: 28px;
-      display: flex;
-      flex-direction: column;
-      text-decoration: none;
-      color: var(--text-primary);
-      position: relative;
-      overflow: hidden;
-      box-shadow: var(--card-shadow);
-      transition:
-        transform 0.8s cubic-bezier(0.25, 0.1, 0.25, 1),
-        box-shadow 0.8s cubic-bezier(0.25, 0.1, 0.25, 1),
-        border-color 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
-    }
-
-    .card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 50%;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 100%);
-      pointer-events: none;
-    }
-
-    .card::after {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 1px;
-      background: linear-gradient(90deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
-    }
-
-    .card:hover {
-      transform: translateY(-8px) scale(1.02);
-      border-color: var(--border-hover);
-      box-shadow:
-        0 25px 70px rgba(0, 0, 0, 0.4),
-        0 0 50px var(--accent-dim),
-        inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    }
-
-    .card-kicker {
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--accent);
-      margin-bottom: 10px;
-    }
-
-    .card h3 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .card p {
-      font-size: 14px;
-      color: var(--text-secondary);
-      flex: 1;
-    }
-
-    .card-cta {
-      margin-top: 18px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--accent);
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: gap 0.3s ease;
-    }
-
-    .card:hover .card-cta { gap: 10px; }
-
-    /* results section */
-    .results {
-      text-align: center;
-      margin-bottom: 56px;
-      animation: fadeInUp 0.6s ease 0.3s both;
-    }
-
-    .results h2 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 20px;
-      letter-spacing: -0.01em;
-    }
-
-    .results-figure {
       display: inline-block;
-      padding: 16px;
-      background: linear-gradient(135deg, var(--card-grad-a) 0%, var(--card-grad-b) 100%);
-      backdrop-filter: blur(24px) saturate(200%);
-      -webkit-backdrop-filter: blur(24px) saturate(200%);
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--card-shadow);
+      padding: 11px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 4px;
+      border: 1px solid var(--accent);
+      transition: background-color 0.15s ease, color 0.15s ease;
     }
 
-    .results-figure img {
-      max-width: 100%;
-      width: 560px;
-      border-radius: var(--radius-md);
+    .btn-solid { background: var(--accent); color: var(--bg); }
+    .btn-solid:hover { text-decoration: none; opacity: 0.9; }
+    .btn-line { background: transparent; color: var(--accent); }
+    .btn-line:hover { text-decoration: none; background: var(--surface); }
+
+    /* fact strip */
+    .facts {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-bottom: 1px solid var(--hairline);
+    }
+
+    .fact {
+      padding: 24px 20px 24px 0;
+    }
+
+    .fact + .fact { border-left: 1px solid var(--hairline); padding-left: 20px; }
+
+    .fact .num {
+      font-family: var(--mono);
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--ink);
+      display: block;
+      line-height: 1.2;
+    }
+
+    .fact .lbl {
+      font-size: 12.5px;
+      color: var(--ink-faint);
+      margin-top: 4px;
       display: block;
     }
 
-    .results-caption {
+    @media (max-width: 720px) {
+      .facts { grid-template-columns: 1fr 1fr; }
+      .fact:nth-child(3) { border-left: none; padding-left: 0; border-top: 1px solid var(--hairline); }
+      .fact:nth-child(4) { border-top: 1px solid var(--hairline); }
+    }
+
+    /* sections */
+    section { padding: 64px 0; border-bottom: 1px solid var(--hairline); }
+
+    .section-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    h2 {
+      font-family: var(--serif);
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .section-note {
+      font-size: 14px;
+      color: var(--ink-soft);
+      max-width: 66ch;
+      margin-bottom: 32px;
+    }
+
+    /* explorer layout */
+    .explorer {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 40px;
+      align-items: start;
+    }
+
+    @media (max-width: 900px) {
+      .explorer { grid-template-columns: 1fr; }
+    }
+
+    .cm-controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .toggle {
+      display: inline-flex;
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .toggle button {
+      font-family: var(--mono);
+      font-size: 12.5px;
+      padding: 7px 14px;
+      background: var(--surface);
+      color: var(--ink-soft);
+      border: none;
+      cursor: pointer;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+
+    .toggle button + button { border-left: 1px solid var(--hairline); }
+
+    .toggle button[aria-pressed="true"] {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .cm-hint {
       font-size: 13px;
-      color: var(--text-muted);
-      margin-top: 12px;
+      color: var(--ink-faint);
+    }
+
+    .cm-scroll { overflow-x: auto; }
+
+    table.cm {
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 12.5px;
+    }
+
+    .cm caption {
+      caption-side: bottom;
+      text-align: left;
+      font-family: var(--sans);
+      font-size: 12.5px;
+      color: var(--ink-faint);
+      padding-top: 14px;
+    }
+
+    .cm th {
+      font-weight: 500;
+      color: var(--ink-soft);
+      padding: 6px 8px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .cm thead th {
+      vertical-align: bottom;
+      text-align: center;
+      font-size: 11.5px;
+      padding: 4px 2px;
+    }
+
+    .cm thead th span {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      display: inline-block;
+      max-height: 92px;
+      overflow: hidden;
+    }
+
+    .cm tbody th {
+      cursor: pointer;
+      border-right: 1px solid var(--hairline);
+      font-size: 11.5px;
+      user-select: none;
+    }
+
+    .cm tbody th:hover { color: var(--accent); }
+
+    .cm td {
+      width: 44px;
+      height: 40px;
+      min-width: 44px;
+      text-align: center;
+      border: 1px solid var(--bg);
+      background: var(--surface);
+      color: var(--ink-faint);
+      cursor: pointer;
+      transition: outline-color 0.1s ease;
+    }
+
+    .cm td.dark-cell { color: var(--cell-ink-strong); }
+    .cm td.mid-cell { color: var(--ink); }
+
+    .cm td:hover { outline: 2px solid var(--ink); outline-offset: -2px; }
+
+    .cm tr.sel th { color: var(--select); font-weight: 700; }
+    .cm tr.sel td { outline: 1px solid var(--select); outline-offset: -1px; }
+    .cm tr.dim td { opacity: 0.25; }
+    .cm tr.dim th { opacity: 0.4; }
+
+    /* tooltip */
+    #cm-tip {
+      position: fixed;
+      z-index: 10;
+      pointer-events: none;
+      background: var(--ink);
+      color: var(--bg);
+      font-size: 12.5px;
+      line-height: 1.5;
+      padding: 8px 12px;
+      border-radius: 4px;
+      max-width: 260px;
+      display: none;
+    }
+
+    #cm-tip .tip-pair { font-weight: 600; }
+    #cm-tip .tip-num { font-family: var(--mono); }
+
+    /* side panel */
+    .cm-panel {
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      background: var(--surface);
+      padding: 24px;
+    }
+
+    .cm-panel h3 {
+      font-family: var(--serif);
+      font-size: 20px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .cm-panel .panel-sub {
+      font-size: 12.5px;
+      color: var(--ink-faint);
+      margin-bottom: 18px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 8px 0;
+      border-top: 1px solid var(--hairline);
+      font-size: 13.5px;
+    }
+
+    .stat-row .k { color: var(--ink-soft); }
+    .stat-row .v { font-family: var(--mono); font-weight: 600; }
+
+    .bar-track {
+      height: 6px;
+      background: var(--bg);
+      border: 1px solid var(--hairline);
+      border-radius: 2px;
+      margin: 6px 0 2px;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: var(--accent);
+    }
+
+    .conf-list { margin-top: 4px; }
+
+    .conf-item {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 6px 0;
+      border-top: 1px solid var(--hairline);
+    }
+
+    .conf-item .c-name { color: var(--ink-soft); }
+    .conf-item .c-count { font-family: var(--mono); color: var(--ink); }
+
+    .panel-clear {
+      margin-top: 18px;
+      width: 100%;
+      padding: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      font-family: var(--sans);
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .panel-clear:hover { border-color: var(--accent); }
+
+    /* class legend */
+    .class-legend {
+      margin-top: 40px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      border-top: 1px solid var(--hairline);
+      border-left: 1px solid var(--hairline);
+    }
+
+    .class-cell {
+      border-right: 1px solid var(--hairline);
+      border-bottom: 1px solid var(--hairline);
+      padding: 12px 14px;
+      font-size: 13px;
+    }
+
+    .class-cell .ci {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      color: var(--ink-faint);
+      display: block;
+    }
+
+    /* notebooks */
+    .nb-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 720px) { .nb-grid { grid-template-columns: 1fr; } }
+
+    .nb-card {
+      display: block;
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      background: var(--surface);
+      padding: 28px;
+      color: var(--ink);
+      transition: border-color 0.15s ease;
+    }
+
+    .nb-card:hover { border-color: var(--accent); text-decoration: none; }
+
+    .nb-card .nb-kicker {
+      font-family: var(--mono);
+      font-size: 11.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    .nb-card h3 {
+      font-family: var(--serif);
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .nb-card p { font-size: 14px; color: var(--ink-soft); margin-bottom: 16px; }
+
+    .nb-card .nb-cta { font-size: 13.5px; font-weight: 600; color: var(--accent); }
+
+    /* figure */
+    .fig-block { margin-top: 40px; }
+
+    .fig-block details summary {
+      cursor: pointer;
+      font-size: 13.5px;
+      color: var(--ink-soft);
+    }
+
+    .fig-block img {
+      margin-top: 16px;
+      max-width: 100%;
+      width: 520px;
+      border: 1px solid var(--hairline);
+      border-radius: 4px;
+      background: #ffffff;
+      display: block;
     }
 
     /* footer */
-    footer {
-      text-align: center;
-      padding: 24px;
-      color: var(--text-muted);
-      font-size: 13px;
-      border-top: 1px solid var(--border);
+    footer { padding: 40px 0 56px; }
+
+    .foot-inner {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+      font-size: 13.5px;
+      color: var(--ink-soft);
     }
 
-    footer a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      transition: color var(--transition);
+    .foot-inner .team { line-height: 1.9; }
+    .foot-inner .team strong { color: var(--ink); font-weight: 600; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
     }
-
-    footer a:hover { color: var(--accent); }
-
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    .card:nth-child(1) { animation: fadeInUp 0.6s ease 0.1s both; }
-    .card:nth-child(2) { animation: fadeInUp 0.6s ease 0.2s both; }
   </style>
 </head>
 <body>
-  <div class="glass-bg"></div>
+  <header>
+    <div class="wrap masthead">
+      <span class="wordmark">Regressive Reasoning</span>
+      <nav>
+        <a href="#explorer">Confusion matrix</a>
+        <a href="#notebooks">Notebooks</a>
+        <a href="report.pdf">Report</a>
+        <a href="https://github.com/matheusmaldaner/RegressiveReasoning">GitHub</a>
+      </nav>
+    </div>
+  </header>
 
   <main>
-    <section class="hero">
-      <h1>Regressive Reasoning</h1>
-      <p class="subtitle">
-        Classifying <strong>10 brand logos</strong> with TensorFlow and EfficientNetV2,
-        trained and evaluated on UF's <strong>HiPerGator</strong> supercomputer,
-        reaching <strong>95% validation accuracy</strong>.
-      </p>
-      <div class="tags">
-        <span class="tag">TensorFlow 2.7</span>
-        <span class="tag">EfficientNetV2</span>
-        <span class="tag">HiPerGator</span>
-        <span class="tag">EEL5840</span>
-      </div>
-      <div class="hero-links">
-        <a class="btn btn-primary" href="https://github.com/matheusmaldaner/RegressiveReasoning">View on GitHub</a>
-        <a class="btn btn-secondary" href="report.pdf">Project Report (PDF)</a>
-      </div>
-    </section>
+    <div class="wrap">
+      <section class="hero" style="border-bottom:none; padding-bottom:40px;">
+        <p class="eyebrow">EEL5840 &middot; Fundamentals of Machine Learning &middot; University of Florida</p>
+        <h1>Ten brands, one classifier.</h1>
+        <p class="lede">
+          A <strong>10-class brand logo classifier</strong> built with TensorFlow and transfer learning from an
+          <strong>EfficientNetV2-S</strong> backbone, trained and evaluated on UF's
+          <strong>HiPerGator</strong> supercomputer. The model reaches
+          <strong>95% validation accuracy</strong> across logos from Nike to 3M.
+        </p>
+        <div class="hero-actions">
+          <a class="btn btn-solid" href="https://github.com/matheusmaldaner/RegressiveReasoning">View on GitHub</a>
+          <a class="btn btn-line" href="report.pdf">Project report (PDF)</a>
+        </div>
+      </section>
 
-    <section class="cards">
-      <a class="card" href="train.html">
-        <span class="card-kicker">Notebook</span>
-        <h3>train.ipynb</h3>
-        <p>The training pipeline: data loading, train and validation splitting, and transfer learning from an EfficientNetV2-S backbone on the ten-class logo dataset.</p>
-        <span class="card-cta">Read the rendered notebook -&gt;</span>
-      </a>
-      <a class="card" href="test.html">
-        <span class="card-kicker">Notebook</span>
-        <h3>test.ipynb</h3>
-        <p>The evaluation pipeline: loading the trained checkpoint and reporting accuracy on the easy and hard test sets, with a confidence threshold for unclassifiable inputs.</p>
-        <span class="card-cta">Read the rendered notebook -&gt;</span>
-      </a>
-    </section>
-
-    <section class="results">
-      <h2>Results</h2>
-      <div class="results-figure">
-        <img src="confusion_matrix.png" alt="Confusion matrix for the ten-class brand logo classifier">
+      <div class="facts">
+        <div class="fact"><span class="num">10</span><span class="lbl">brand classes</span></div>
+        <div class="fact"><span class="num">95%</span><span class="lbl">validation accuracy</span></div>
+        <div class="fact"><span class="num">EfficientNetV2-S</span><span class="lbl">backbone, TensorFlow 2.7</span></div>
+        <div class="fact"><span class="num">HiPerGator</span><span class="lbl">training environment</span></div>
       </div>
-      <p class="results-caption">Confusion matrix on the validation set across the ten brand classes.</p>
-    </section>
+
+      <section id="explorer">
+        <div class="section-head">
+          <h2>Confusion matrix explorer</h2>
+        </div>
+        <p class="section-note">
+          The validation confusion matrix, rebuilt as an interactive table from the values in the original
+          matplotlib figure. Hover a cell for the class pair, count, and row share. Click a row to isolate
+          one brand's error profile. Toggle between raw counts and row-normalized percentages.
+        </p>
+
+        <div class="explorer">
+          <div>
+            <div class="cm-controls">
+              <div class="toggle" role="group" aria-label="Value display mode">
+                <button id="mode-count" aria-pressed="true">counts</button>
+                <button id="mode-pct" aria-pressed="false">row %</button>
+              </div>
+              <span class="cm-hint">click a row label to inspect a class &middot; Esc clears</span>
+            </div>
+            <div class="cm-scroll">
+              <table class="cm" id="cm-table" aria-label="Validation confusion matrix, true class by predicted class">
+                <caption>Rows are true classes, columns are predicted classes. 1,188 validation images.</caption>
+              </table>
+            </div>
+          </div>
+
+          <aside class="cm-panel" id="cm-panel" aria-live="polite"></aside>
+        </div>
+
+        <div class="class-legend" id="class-legend"></div>
+
+        <div class="fig-block">
+          <details>
+            <summary>Show the original matplotlib figure</summary>
+            <img src="confusion_matrix.png" alt="Original confusion matrix figure for the ten-class brand logo classifier" loading="lazy">
+          </details>
+        </div>
+      </section>
+
+      <section id="notebooks">
+        <div class="section-head">
+          <h2>Notebooks</h2>
+        </div>
+        <p class="section-note">
+          Both pipelines are published as rendered notebooks, exactly as they ran on HiPerGator's
+          TensorFlow&nbsp;2.7.0 kernel.
+        </p>
+        <div class="nb-grid">
+          <a class="nb-card" href="train.html">
+            <span class="nb-kicker">Training</span>
+            <h3>train.ipynb</h3>
+            <p>Data loading, train and validation splitting, and transfer learning from an EfficientNetV2-S backbone on the ten-class logo dataset.</p>
+            <span class="nb-cta">Read the rendered notebook -&gt;</span>
+          </a>
+          <a class="nb-card" href="test.html">
+            <span class="nb-kicker">Evaluation</span>
+            <h3>test.ipynb</h3>
+            <p>Loading the trained checkpoint and reporting accuracy on the easy and hard test sets, with a confidence threshold for unclassifiable inputs.</p>
+            <span class="nb-cta">Read the rendered notebook -&gt;</span>
+          </a>
+        </div>
+      </section>
+    </div>
   </main>
 
   <footer>
-    <p>Matheus Kunzler Maldaner, Pedro Moss, Ruo Chen &middot; <a href="https://matheus.wiki">matheus.wiki</a></p>
+    <div class="wrap foot-inner">
+      <p class="team">
+        <strong>Matheus Kunzler Maldaner</strong> &middot; Pedro Moss &middot; Ruo Chen
+      </p>
+      <p><a href="https://matheus.wiki">matheus.wiki</a></p>
+    </div>
   </footer>
+
+  <div id="cm-tip" role="tooltip"></div>
+
+  <script>
+    (function () {
+      "use strict";
+
+      // class labels 0-9 per the project readme
+      var CLASSES = ["Nike", "Adidas", "Ford", "Honda", "General Mills", "Unilever", "McDonald's", "KFC", "Gator", "3M"];
+
+      // validation confusion matrix transcribed from confusion_matrix.png (rows = true, cols = predicted)
+      var M = [
+        [111, 7, 0, 1, 0, 0, 0, 1, 0, 0],
+        [0, 111, 1, 2, 0, 1, 1, 1, 0, 0],
+        [0, 0, 113, 2, 0, 0, 0, 1, 1, 0],
+        [0, 2, 4, 109, 0, 0, 0, 2, 0, 0],
+        [0, 0, 0, 0, 117, 1, 0, 0, 0, 1],
+        [0, 0, 0, 0, 5, 115, 0, 0, 0, 2],
+        [1, 4, 1, 1, 0, 0, 109, 0, 0, 2],
+        [1, 4, 1, 1, 0, 0, 0, 111, 0, 0],
+        [0, 1, 2, 1, 0, 1, 0, 2, 110, 1],
+        [0, 2, 0, 4, 0, 0, 0, 0, 0, 115]
+      ];
+
+      var N = CLASSES.length;
+      var rowTotals = M.map(function (r) { return r.reduce(function (a, b) { return a + b; }, 0); });
+      var colTotals = CLASSES.map(function (_, j) {
+        return M.reduce(function (a, r) { return a + r[j]; }, 0);
+      });
+      var total = rowTotals.reduce(function (a, b) { return a + b; }, 0);
+      var correct = M.reduce(function (a, r, i) { return a + r[i]; }, 0);
+
+      var mode = "count"; // or "pct"
+      var sel = null;     // selected true-class row index
+
+      var table = document.getElementById("cm-table");
+      var panel = document.getElementById("cm-panel");
+      var tip = document.getElementById("cm-tip");
+
+      function pct(n, d) { return d ? (100 * n / d) : 0; }
+      function fmtPct(v) { return v.toFixed(1) + "%"; }
+
+      function cellText(i, j) {
+        if (mode === "count") return String(M[i][j]);
+        var v = pct(M[i][j], rowTotals[i]);
+        if (v === 0) return "0";
+        if (v < 1) return v.toFixed(1);
+        return Math.round(v).toString();
+      }
+
+      function buildTable() {
+        var html = "<thead><tr><th></th>";
+        for (var j = 0; j < N; j++) {
+          html += '<th scope="col"><span>' + CLASSES[j] + "</span></th>";
+        }
+        html += "</tr></thead><tbody>";
+        for (var i = 0; i < N; i++) {
+          html += '<tr data-row="' + i + '"><th scope="row" tabindex="0" role="button" aria-label="Inspect class ' + CLASSES[i] + '">' + CLASSES[i] + "</th>";
+          for (var k = 0; k < N; k++) {
+            html += '<td data-i="' + i + '" data-j="' + k + '" tabindex="0"></td>';
+          }
+          html += "</tr>";
+        }
+        html += "</tbody>";
+        table.innerHTML = html;
+        paintCells();
+      }
+
+      function paintCells() {
+        var cells = table.querySelectorAll("td");
+        cells.forEach(function (td) {
+          var i = +td.dataset.i, j = +td.dataset.j;
+          var frac = rowTotals[i] ? M[i][j] / rowTotals[i] : 0;
+          // flat solid fill per cell, alpha scaled by row share
+          var alpha = frac === 0 ? 0 : 0.08 + 0.92 * frac;
+          var hue = getComputedStyle(document.documentElement).getPropertyValue("--cell-hue").trim();
+          td.style.backgroundColor = frac === 0 ? "" : "rgba(" + hue + ", " + alpha.toFixed(3) + ")";
+          td.classList.toggle("dark-cell", frac > 0.55);
+          td.classList.toggle("mid-cell", frac > 0.03 && frac <= 0.55);
+          td.textContent = cellText(i, j);
+          td.setAttribute("aria-label",
+            "True " + CLASSES[i] + ", predicted " + CLASSES[j] + ": " + M[i][j] +
+            " images, " + fmtPct(pct(M[i][j], rowTotals[i])) + " of row");
+        });
+      }
+
+      function renderPanel() {
+        if (sel === null) {
+          var acc = pct(correct, total);
+          panel.innerHTML =
+            '<h3>Validation set</h3>' +
+            '<p class="panel-sub">derived from the matrix values</p>' +
+            statRow("Images", total.toLocaleString()) +
+            statRow("Correct", correct.toLocaleString()) +
+            statRow("Matrix accuracy", fmtPct(acc)) +
+            statRow("Best recall", bestWorst(true)) +
+            statRow("Lowest recall", bestWorst(false)) +
+            '<p class="panel-sub" style="margin-top:18px; margin-bottom:0;">Select a row in the matrix to see one class in detail.</p>';
+          return;
+        }
+        var i = sel;
+        var recall = pct(M[i][i], rowTotals[i]);
+        var precision = pct(M[i][i], colTotals[i]);
+        var errs = [];
+        for (var j = 0; j < N; j++) {
+          if (j !== i && M[i][j] > 0) errs.push([j, M[i][j]]);
+        }
+        errs.sort(function (a, b) { return b[1] - a[1]; });
+        var errHtml = errs.length
+          ? errs.map(function (e) {
+              return '<div class="conf-item"><span class="c-name">mistaken for ' + CLASSES[e[0]] + '</span><span class="c-count">' + e[1] + "</span></div>";
+            }).join("")
+          : '<div class="conf-item"><span class="c-name">no errors in this row</span><span class="c-count">0</span></div>';
+        panel.innerHTML =
+          "<h3>" + CLASSES[i] + "</h3>" +
+          '<p class="panel-sub">class ' + i + " &middot; " + rowTotals[i] + " validation images</p>" +
+          statRow("Correct", M[i][i] + " / " + rowTotals[i]) +
+          statRow("Recall", fmtPct(recall)) +
+          '<div class="bar-track"><div class="bar-fill" style="width:' + recall.toFixed(1) + '%"></div></div>' +
+          statRow("Precision", fmtPct(precision)) +
+          '<div class="conf-list">' + errHtml + "</div>" +
+          '<button class="panel-clear" id="panel-clear">Clear selection</button>';
+        document.getElementById("panel-clear").addEventListener("click", function () { setSel(null); });
+      }
+
+      function statRow(k, v) {
+        return '<div class="stat-row"><span class="k">' + k + '</span><span class="v">' + v + "</span></div>";
+      }
+
+      function bestWorst(best) {
+        var idx = 0, val = pct(M[0][0], rowTotals[0]);
+        for (var i = 1; i < N; i++) {
+          var r = pct(M[i][i], rowTotals[i]);
+          if (best ? r > val : r < val) { val = r; idx = i; }
+        }
+        return CLASSES[idx] + " " + fmtPct(val);
+      }
+
+      function setSel(i) {
+        sel = (sel === i) ? null : i;
+        table.querySelectorAll("tbody tr").forEach(function (tr) {
+          var r = +tr.dataset.row;
+          tr.classList.toggle("sel", sel !== null && r === sel);
+          tr.classList.toggle("dim", sel !== null && r !== sel);
+        });
+        renderPanel();
+      }
+
+      function buildLegend() {
+        var legend = document.getElementById("class-legend");
+        legend.innerHTML = CLASSES.map(function (c, i) {
+          return '<div class="class-cell"><span class="ci">class ' + i + "</span>" + c + "</div>";
+        }).join("");
+      }
+
+      // events
+      table.addEventListener("click", function (e) {
+        var th = e.target.closest("tbody th");
+        if (th) { setSel(+th.parentElement.dataset.row); return; }
+        var td = e.target.closest("td");
+        if (td) setSel(+td.dataset.i);
+      });
+
+      table.addEventListener("keydown", function (e) {
+        if (e.key !== "Enter" && e.key !== " ") return;
+        var th = e.target.closest("tbody th");
+        var td = e.target.closest("td");
+        if (th) { e.preventDefault(); setSel(+th.parentElement.dataset.row); }
+        else if (td) { e.preventDefault(); setSel(+td.dataset.i); }
+      });
+
+      document.addEventListener("keydown", function (e) {
+        if (e.key === "Escape" && sel !== null) setSel(null);
+      });
+
+      table.addEventListener("mousemove", function (e) {
+        var td = e.target.closest("td");
+        if (!td) { tip.style.display = "none"; return; }
+        var i = +td.dataset.i, j = +td.dataset.j;
+        tip.innerHTML =
+          '<div class="tip-pair">' + CLASSES[i] + " &rarr; predicted " + CLASSES[j] + "</div>" +
+          '<div><span class="tip-num">' + M[i][j] + "</span> image" + (M[i][j] === 1 ? "" : "s") +
+          ' &middot; <span class="tip-num">' + fmtPct(pct(M[i][j], rowTotals[i])) + "</span> of " + CLASSES[i] + " row</div>";
+        tip.style.display = "block";
+        var x = e.clientX + 14, y = e.clientY + 14;
+        var tw = tip.offsetWidth, th2 = tip.offsetHeight;
+        if (x + tw > window.innerWidth - 8) x = e.clientX - tw - 14;
+        if (y + th2 > window.innerHeight - 8) y = e.clientY - th2 - 14;
+        tip.style.left = x + "px";
+        tip.style.top = y + "px";
+      });
+
+      table.addEventListener("mouseleave", function () { tip.style.display = "none"; });
+
+      document.getElementById("mode-count").addEventListener("click", function () { setMode("count"); });
+      document.getElementById("mode-pct").addEventListener("click", function () { setMode("pct"); });
+
+      function setMode(m) {
+        mode = m;
+        document.getElementById("mode-count").setAttribute("aria-pressed", String(m === "count"));
+        document.getElementById("mode-pct").setAttribute("aria-pressed", String(m === "pct"));
+        paintCells();
+      }
+
+      // repaint on theme change so cell hue tracks the color scheme
+      var mq = window.matchMedia("(prefers-color-scheme: dark)");
+      if (mq.addEventListener) mq.addEventListener("change", paintCells);
+
+      buildTable();
+      buildLegend();
+      renderPanel();
+    })();
+  </script>
 </body>
 </html>
