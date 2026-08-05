@@ -8,6 +8,13 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    // apply saved theme before first paint to avoid a flash
+    (function () {
+      var t = localStorage.getItem("theme");
+      if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+    })();
+  </script>
   <style>
     /* design tokens */
     :root {
@@ -35,7 +42,7 @@
     }
 
     @media (prefers-color-scheme: dark) {
-      :root {
+      :root:not([data-theme="light"]) {
         --color-bg: #111114;
         --color-surface: #1c1c20;
         --color-text: #e8e8ec;
@@ -50,6 +57,22 @@
         --cell-hue: 52, 211, 158;
         --cell-ink-strong: #0c0e12;
       }
+    }
+
+    :root[data-theme="dark"] {
+      --color-bg: #111114;
+      --color-surface: #1c1c20;
+      --color-text: #e8e8ec;
+      --color-text-muted: #b4b4b8;
+      --color-border: #333338;
+      --color-primary: #10b981;
+      --color-primary-hover: #34d39e;
+      --color-bg-alt: #18181c;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 8px rgba(0,0,0,0.5);
+      --btn-depth-neutral: #000000;
+      --cell-hue: 52, 211, 158;
+      --cell-ink-strong: #0c0e12;
     }
 
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -104,6 +127,7 @@
 
     .masthead nav {
       display: flex;
+      align-items: center;
       gap: 22px;
       font-size: 14px;
       font-weight: 500;
@@ -112,18 +136,42 @@
     .masthead nav a { color: var(--color-text-muted); }
     .masthead nav a:hover { color: var(--color-text); text-decoration: none; }
 
+    /* theme toggle */
+    .theme-toggle {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--color-surface);
+      color: var(--color-text);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: border-color var(--transition), color var(--transition);
+    }
+
+    .theme-toggle:hover { border-color: var(--color-primary); color: var(--color-primary); }
+    .theme-toggle svg { display: block; width: 16px; height: 16px; }
+
+    /* moon in light mode, sun in dark mode */
+    .theme-toggle .icon-sun { display: none; }
+    .theme-toggle .icon-moon { display: block; }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) .theme-toggle .icon-sun { display: block; }
+      :root:not([data-theme="light"]) .theme-toggle .icon-moon { display: none; }
+    }
+
+    :root[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+    :root[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
+
+    :root[data-theme="light"] .theme-toggle .icon-sun { display: none; }
+    :root[data-theme="light"] .theme-toggle .icon-moon { display: block; }
+
     /* hero */
     .hero {
       padding: 76px 0 56px;
-    }
-
-    .section-label {
-      font-size: 0.78rem;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--color-primary);
-      margin-bottom: 14px;
     }
 
     .hero h1 {
@@ -590,6 +638,15 @@
         <a href="#notebooks">Notebooks</a>
         <a href="report.pdf">Report</a>
         <a href="https://github.com/matheusmaldaner/RegressiveReasoning">GitHub</a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="toggle theme">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
       </nav>
     </div>
   </header>
@@ -597,7 +654,6 @@
   <main>
     <div class="wrap">
       <section class="hero" style="padding-bottom:40px;">
-        <p class="section-label">EEL5840 &middot; Fundamentals of Machine Learning &middot; University of Florida</p>
         <h1>Ten brands, one classifier.</h1>
         <p class="lede">
           A <strong>10-class brand logo classifier</strong> built with TensorFlow and transfer learning from an
@@ -619,7 +675,6 @@
       </div>
 
       <section id="explorer">
-        <p class="section-label">Interactive results</p>
         <h2>Confusion matrix explorer</h2>
         <p class="section-note">
           The validation confusion matrix, rebuilt as an interactive table from the values in the original
@@ -657,7 +712,6 @@
       </section>
 
       <section id="notebooks">
-        <p class="section-label">Reproducibility</p>
         <h2>Notebooks</h2>
         <p class="section-note">
           Both pipelines are published as rendered notebooks, exactly as they ran on HiPerGator's
@@ -896,6 +950,17 @@
       // repaint on theme change so cell hue tracks the color scheme
       var mq = window.matchMedia("(prefers-color-scheme: dark)");
       if (mq.addEventListener) mq.addEventListener("change", paintCells);
+      window.addEventListener("themechange", paintCells);
+
+      // theme toggle
+      document.getElementById("theme-toggle").addEventListener("click", function () {
+        var root = document.documentElement;
+        var current = root.dataset.theme || (mq.matches ? "dark" : "light");
+        var next = current === "dark" ? "light" : "dark";
+        root.dataset.theme = next;
+        localStorage.setItem("theme", next);
+        window.dispatchEvent(new CustomEvent("themechange"));
+      });
 
       buildTable();
       buildLegend();
